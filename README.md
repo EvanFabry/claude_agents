@@ -2,6 +2,42 @@
 
 > A production-ready orchestrator-workers pattern implementation for Claude Code with intelligent complexity assessment, adaptive workflows, and evidence-based validation.
 
+## Origin Story
+
+This repository was created to extract and generalize a production multi-agent system from a specific project implementation. The goal was to create a reusable, public-facing framework that others could adapt to their own Claude Code projects.
+
+### Creation Process
+
+The initial version was generated using the following process (executed by the `agent-system-optimizer` agent):
+
+**Original Directive:**
+```
+Act as the agent-system-optimizer agent and for each agent within the repository:
+
+1. Read each section of the documentation. Remove anything unique to the original
+   project infrastructure.
+
+2. Assess the degree of section overlap across prompts. Re-organize so that:
+   a. Each section has low overlap in content coverage
+   b. Section order/numbering reflects importance (most to least critical)
+   c. All project-specific logic is stubbed out with user guidance
+   d. Resulting agent prompts are ~500 lines (ideally less)
+
+3. Perform a second pass as agent-system-optimizer to validate conditions are met
+
+4. Final validation pass as critique-and-validation-agent
+
+SUCCESS CRITERIA: Both agent-system-optimizer and critique-and-validation-agent
+can confidently assess the work is complete and production-ready.
+```
+
+This multi-pass process with dual agent validation ensured:
+- Clean separation of concerns across agents
+- Removal of project-specific implementation details
+- Maintainable prompt sizes
+- Clear guidance for customization
+- Production-ready generalization
+
 ## Overview
 
 This repository provides a complete multi-agent system for Claude Code that implements Anthropic's recommended orchestrator-workers pattern. It features a primary orchestrator that intelligently coordinates specialized sub-agents to handle tasks ranging from simple queries to complex multi-step workflows.
@@ -563,42 +599,6 @@ See `AGENTS.md` Section VI for complete architecture.
 - [YOUR_DOC_1.md]: [Purpose]
 - [YOUR_DOC_2.md]: [Purpose]
 ```
-
-## Origin Story
-
-This repository was created to extract and generalize a production multi-agent system from a specific project implementation. The goal was to create a reusable, public-facing framework that others could adapt to their own Claude Code projects.
-
-### Creation Process
-
-The initial version was generated using the following process (executed by the `agent-system-optimizer` agent):
-
-**Original Directive:**
-```
-Act as the agent-system-optimizer agent and for each agent within the repository:
-
-1. Read each section of the documentation. Remove anything unique to the original
-   project infrastructure.
-
-2. Assess the degree of section overlap across prompts. Re-organize so that:
-   a. Each section has low overlap in content coverage
-   b. Section order/numbering reflects importance (most to least critical)
-   c. All project-specific logic is stubbed out with user guidance
-   d. Resulting agent prompts are ~500 lines (ideally less)
-
-3. Perform a second pass as agent-system-optimizer to validate conditions are met
-
-4. Final validation pass as critique-and-validation-agent
-
-SUCCESS CRITERIA: Both agent-system-optimizer and critique-and-validation-agent
-can confidently assess the work is complete and production-ready.
-```
-
-This multi-pass process with dual agent validation ensured:
-- Clean separation of concerns across agents
-- Removal of project-specific implementation details
-- Maintainable prompt sizes
-- Clear guidance for customization
-- Production-ready generalization
 
 ## Best Practices
 
