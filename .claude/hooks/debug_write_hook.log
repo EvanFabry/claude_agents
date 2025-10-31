@@ -1,0 +1,6 @@
+=== PostToolUse Hook Triggered ===
+Timestamp: 2025-10-01T04:26:50.3NZ
+Input data:
+{"session_id":"test","hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"test.js","content":"test"}}
+
+==================

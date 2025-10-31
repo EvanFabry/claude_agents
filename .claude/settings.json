@@ -1,0 +1,173 @@
+{
+  "env": {
+    "BASH_DEFAULT_TIMEOUT_MS": "1800000"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(which:*)",
+      "Bash(echo:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(killport:*)",
+      "Bash(./scripts/killport.sh:*)",
+      "Bash(vercel:*)",
+      "Bash(./scripts/vercel-wrapper.sh:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Edit(./**)",
+      "Glob(./**)",
+      "Grep(./**)",
+      "MultiEdit(./**)",
+      "Read(./**)",
+      "Update(./**)",
+      "WebFetch(domain:*)",
+      "Write(./**)"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(git push:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/sessionstart.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "code-writing-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/subagentstop_code_writing_validation.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "code-reviewer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/subagentstop_code_reviewer_guidance.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "debugging-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 10s bash -c 'echo \"[DEBUGGING COMPLETE] Validating application state\" && if timeout 15s pnpm typecheck --quiet 2>/dev/null; then echo \"[TYPE SAFETY] ✅ Code integrity maintained during debugging\"; else echo \"[TYPE SAFETY] ⚠️ Type issues detected - debugging may have affected code quality\"; fi && echo \"[DEBUGGING STATUS] Investigation complete - ready for implementation or escalation\" || echo \"[QUALITY CHECK TIMEOUT] Debugging validation timed out\"' 2>/dev/null"
+          }
+        ]
+      },
+      {
+        "matcher": "planning-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 5s bash -c 'echo \"[PLANNING] ✅ Planning phase completed\" || echo \"[STATUS TIMEOUT] Planning completion timed out\"' 2>/dev/null"
+          }
+        ]
+      },
+      {
+        "matcher": "critique-and-validation-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/subagentstop_validation_quality_status.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "testing-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/subagentstop_application_validation.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "agent-template-generator",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 5s bash -c 'echo \"[TEMPLATE] ✅ Template generation completed\" || echo \"[STATUS TIMEOUT] Template completion timed out\"' 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre_tool_use_analytics.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pretooluse_bash_validation.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/post_tool_use_analytics.py"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 10s .claude/hooks/send_notification.sh \"Claude needs your attention\" \"Claude Code\" \"1\" 2>/dev/null || echo \"[NOTIFICATION TIMEOUT] Notification timed out\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 10s bash -c '.claude/hooks/send_notification.sh \"Claude completed or is idle\" \"Claude Code\" \"0\" 2>/dev/null; echo \"[ANALYTICS] Run: python3 .claude/hooks/analytics_reporter.py\" || echo \"[ANALYTICS TIMEOUT] Analysis timed out\"' 2>/dev/null"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "timeout 60s bash -c '.claude/hooks/send_notification.sh \"Claude session ended\" \"Claude Code\" \"0\" 2>/dev/null; timeout 30s python3 .claude/hooks/analytics_reporter.py --export || echo \"[SESSION END TIMEOUT] Final analysis timed out\"' 2>/dev/null"
+          }
+        ]
+      }
+    ]
+  }
+}

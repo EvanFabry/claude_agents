@@ -1,0 +1,36 @@
+#!/bin/bash
+# PreToolUse hook for application-interaction-agent agent
+# Validates file creation patterns before tool execution
+
+# Parse tool use from stdin (Claude provides tool use JSON)
+TOOL_USE=$(cat)
+
+# Extract tool name
+TOOL_NAME=$(echo "$TOOL_USE" | jq -r '.tool_name // empty')
+
+# Check if this is a Bash command that creates files
+if [ "$TOOL_NAME" = "Bash" ]; then
+    COMMAND=$(echo "$TOOL_USE" | jq -r '.parameters.command // empty')
+
+    # Detect file creation patterns in bash commands
+    if echo "$COMMAND" | grep -qE '(cat\s+>|echo\s+>|>\s*["\047]?[\w/.-]+\.js|>\s*["\047]?[\w/.-]+\.ts|<<\s*["\047]?EOF)'; then
+        echo "❌ TOOL CONSTRAINT VIOLATION DETECTED"
+        echo ""
+        echo "🚫 You attempted to use Bash for file creation:"
+        echo "   Command: $COMMAND"
+        echo ""
+        echo "✅ REQUIRED PATTERN:"
+        echo "   1. Use Write tool to create file"
+        echo "   2. Then use separate Bash command to execute file"
+        echo ""
+        echo "Example correct usage:"
+        echo "   Write(file_path='testing_agent/scripts/test.js', content='...')"
+        echo "   Bash(command='node testing_agent/scripts/test.js')"
+        echo ""
+        echo "This tool use has been BLOCKED. Please retry with Write tool."
+        exit 1
+    fi
+fi
+
+# Allow tool use to proceed
+exit 0

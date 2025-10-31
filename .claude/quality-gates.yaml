@@ -1,0 +1,119 @@
+# Quality Gates Configuration
+# Implements Anthropic's quality control patterns with evidence-based validation
+
+quality_gates:
+  # Task routing gates
+  complexity_assessment:
+    trigger: "every_user_request"
+    enforcement: "mandatory"
+    validation_script: ".claude/hooks/workflow-validation.sh"
+
+  workflow_routing:
+    simple_tasks:
+      complexity_range: "0-2"
+      agents_required: []
+      agents_optional: ["critique-and-validation-agent"]
+      evidence_required: "minimal"
+
+    medium_tasks:
+      complexity_range: "3-5"
+      agents_required:
+        - "planning-agent"
+        - "critique-and-validation-agent"
+        - "code-writing-agent"
+        - "code-reviewer"
+      agents_conditional:
+        - agent: "testing-agent"
+          condition: "ui_verification_needed"
+      evidence_required: "moderate"
+
+    complex_tasks:
+      complexity_range: "6+"
+      agents_required:
+        - "planning-agent"
+        - "critique-and-validation-agent"
+        - "code-writing-agent"
+        - "critique-and-validation-agent"
+        - "code-reviewer"
+        - "testing-agent"
+        - "critique-and-validation-agent"
+      evidence_required: "comprehensive"
+      completion_authority: "critique-and-validation-agent"
+
+  # Evidence collection gates
+  evidence_requirements:
+    css_ui_tasks:
+      mandatory_artifacts:
+        - "cdp-computed-styles.json"
+        - "before-screenshot.png"
+        - "after-screenshot.png"
+        - "console-logs.txt"
+        - "test-results.json"
+      validation_script: ".claude/hooks/evidence-validation.sh"
+      storage_location: "testing_agent/outputs/"
+
+    code_implementation_tasks:
+      mandatory_artifacts:
+        - "implementation-complete.md"
+        - "code-review-results.md"
+        - "integration-test-results.json"
+      validation_criteria:
+        - "code_compiles_without_errors"
+        - "tests_pass"
+        - "no_regressions_detected"
+
+  # Completion authorization gates
+  completion_authority:
+    simple_tasks:
+      authorizer: "primary_agent"
+      evidence_required: false
+      critique_validation: "recommended"
+
+    medium_tasks:
+      authorizer: "critique-and-validation-agent"
+      evidence_required: true
+      all_agents_complete: true
+
+    complex_tasks:
+      authorizer: "critique-and-validation-agent"
+      evidence_required: true
+      all_agents_complete: true
+      evidence_validation: "comprehensive"
+      user_requirements_verified: true
+
+  # Anti-bypass enforcement
+  enforcement_rules:
+    browser_automation:
+      delegation_required: true
+      target_agent: "testing-agent"
+      bypass_allowed: false
+
+    completion_claims:
+      self_completion_forbidden: true
+      evidence_blocking: true
+      critique_agent_veto: true
+
+    workflow_skipping:
+      complexity_3_plus_requires_agents: true
+      agent_sequence_enforced: true
+      context_preservation_required: true
+
+# Quality metrics and monitoring
+monitoring:
+  success_metrics:
+    - "task_completion_rate"
+    - "evidence_collection_compliance"
+    - "agent_workflow_adherence"
+    - "user_requirement_satisfaction"
+
+  failure_patterns:
+    - "completion_without_evidence"
+    - "agent_workflow_bypass"
+    - "critique_agent_not_called"
+    - "browser_automation_self_performed"
+
+  quality_indicators:
+    - "time_to_completion"
+    - "evidence_artifact_count"
+    - "agent_coordination_smoothness"
+    - "requirement_traceability"
